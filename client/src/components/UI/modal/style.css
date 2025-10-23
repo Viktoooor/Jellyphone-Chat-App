@@ -1,0 +1,287 @@
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dialog-content {
+  background: rgba(30, 30, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px 15px 25px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  padding-top: 10px;
+}
+
+.dialog-body {
+  padding: 15px 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 400px;
+  max-width: 90vw;
+}
+
+.dialog-body label {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.dialog-body input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  outline: none;
+  font-size: 16px;
+  transition: all 0.15s ease-out;
+}
+
+.dialog-body span{
+  color: var(--error-color);
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  padding: 10px 25px 20px;
+}
+
+/* crop picture modal */
+.crop-container .ReactCrop img {
+  min-height: 25vh;
+  max-height: 50vh;
+  
+}
+
+.crop-container {
+  padding: 10px 20px;
+  min-width: 350px;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+}
+
+/* file viewer modal */
+.file-grid {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  max-height: 50vh;
+  width: 40vw;
+  min-width: 350px;
+}
+
+.file-tile {
+  position: relative;
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(45, 45, 55, 0.85);
+}
+
+.file-preview {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.file-icon-wrapper {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  padding-bottom: 0.5rem;
+}
+
+.file-icon-placeholder {
+  width: 100px;
+  height: 100px;
+  background-color: #eef2f5;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed #b0c4de;
+  margin: auto;
+}
+
+.file-icon-text {
+  color: #778899;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.file-name {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  text-align: center;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.delete-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 20;
+  
+  display: grid;
+  place-items: center;
+
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease-in-out;
+}
+
+.delete-icon *{
+  cursor: pointer;
+}
+
+.file-tile:hover .delete-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.file-tile:hover .cancel-button {
+  opacity: 1;
+}
+
+.delete-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.tile-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  border-radius: 6px;
+}
+
+.success-overlay {
+  background-color: rgba(230, 255, 230, 0.6);
+}
+
+.progress-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+
+.progress-svg {
+  transform: rotate(-90deg);
+}
+
+.progress-ring {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.status-ring.success, .status-ring.error {
+  stroke-dasharray: 0;
+}
+
+.center-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cancel-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  background-color: grey;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 40px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.checkmark {
+  width: 40px;
+  height: 40px;
+}
+.checkmark-path {
+  stroke: #28a745;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+
+.cross {
+  width: 35px;
+  height: 35px;
+}
+.cross-path {
+  stroke: #dc3545;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.progress-svg circle {
+  stroke-width: 3;
+}
