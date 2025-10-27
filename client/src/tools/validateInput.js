@@ -6,7 +6,8 @@ export function isEmailValid(email){
 export function isUserNameValid(username, isRegister = false){
     let regex = /^@?[a-z0-9_]{3,32}$/
     if(isRegister)
-        regex = /[a-z0-9_]{3,32}$/
+        regex = /^[a-z0-9_]{3,32}$/
+    
     return regex.test(username);
 }
 

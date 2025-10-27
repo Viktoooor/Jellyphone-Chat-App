@@ -1,7 +1,8 @@
 import { useStore } from "../../../store/store"
 import LastMessage from "./LastMessage"
+import { memo } from "react"
 
-const ChatItem = ({ chat, active, onSelectChat }) => {
+const ChatItem = memo(({ chat, lastMessage, active, onSelectChat }) => {
     const status = useStore(state => {
         if(state.contactStatus && chat.chat_id in state.contactStatus){
             return state.contactStatus[chat.chat_id]
@@ -36,6 +37,6 @@ const ChatItem = ({ chat, active, onSelectChat }) => {
             </div>
         </div>
     )
-}
+})
 
 export default ChatItem

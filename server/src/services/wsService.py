@@ -4,30 +4,39 @@ from ..services.messageService import MessageService
 from ..services.chatService import ChatService
 from ..services.contactService import ContactService
 from uuid import UUID
-from starlette.websockets import WebSocketState
 from ..schemas.messageMeta import MessageMeta
 
 class WSService:
     def __init__(self):
         self.connections: dict[str, list[WebSocket]] = {}
 
-    async def sendStatusToRecipient(self, recipient_id: str, chat_id: str,
-                                    status: str):
+    async def sendResponse(self, session: AsyncSession,
+                           recipient_id: str, data: dict, status: str = 'OK',
+                           res_type: str | None = None,
+                           request_id: str | None = None):
         if recipient_id in self.connections:
-            for con in self.connections[recipient_id]:
-                if con.client_state == WebSocketState.DISCONNECTED:
-                    self.connections[recipient_id].remove(con)
-                await con.send_json({
-                    "type": 'receive_status',
-                    "data": {'chat_id': chat_id, 'status': status}
-                })
+            connections = self.connections[recipient_id][:]
+
+            for con in connections:
+                try:
+                    await con.send_json({
+                        "status": status,
+                        "type": res_type,
+                        "data": data,
+                        "request_id": request_id
+                    })
+                except Exception:
+                    self.disconnect(recipient_id, con, session)
 
     async def sendStatusToContacts(self, user_id: str, status: str,
                                    session: AsyncSession):
         contacts = await ContactService(session).getUserContacts(user_id)
 
         for chat_id, contact in contacts.items():
-            await self.sendStatusToRecipient(contact['user_id'], chat_id, status)
+            await self.sendResponse(
+                recipient_id=contact['user_id'], res_type='receive_status', 
+                data={'chat_id': chat_id, 'status': status}, session=session
+            )
 
     async def connect(self, user_id: str, websocket: WebSocket, 
                       session: AsyncSession):
@@ -44,6 +53,9 @@ class WSService:
         if user_id in self.connections:
             self.connections[user_id].remove(websocket)
             
+            if not self.connections[user_id]:
+                del self.connections[user_id]
+
         await self.sendStatusToContacts(user_id, 'offline', session)
 
     def getContactsStatus(self, contacts: dict):
@@ -70,17 +82,16 @@ class WSService:
             "chats": chats, "groupChats": groupChats, 'status': status
         }
 
-    async def sendMessageToMembers(self, members, data: dict, 
-                                     except_id: str = None,
+    async def sendMessageToMembers(self, members, data: dict, session: AsyncSession,
+                                     except_id: str | None = None,
                                      res_type: str = 'receive_message'):
         for id in members:
             recipient_id = str(id)
-            if recipient_id != except_id and recipient_id in self.connections:
-                for con in self.connections[recipient_id]:
-                    await con.send_json({
-                        "type": res_type,
-                        "data": data
-                    })
+            if recipient_id != except_id:
+                await self.sendResponse(
+                    recipient_id=recipient_id, res_type=res_type, data=data,
+                    session=session
+                )
 
     async def sendMessage(
             self, user_id: str, client_id: str | None, chat_id: str, message: str,
@@ -102,9 +113,9 @@ class WSService:
         members = await ChatService(session).getChatMembers(UUID(chat_id))
   
         await self.sendMessageToMembers(
-            members, 
-            {"chat_id":  new_message['chat_id'], "message": new_message},
-            user_id
+            members=members, session=session,
+            data={"chat_id":  new_message['chat_id'], "message": new_message},
+            except_id=user_id
         )
         
         res = {"chat_id": new_message['chat_id'], "message": new_message}
@@ -125,7 +136,8 @@ class WSService:
             members=members,
             data={"message": new_message},
             except_id=user_id,
-            res_type='edit_message'
+            res_type='edit_message',
+            session=session
         )
 
     async def deleteMessage(self, user_id: str, message_id: str,
@@ -141,7 +153,8 @@ class WSService:
         await self.sendMessageToMembers(
             members=members,
             data={"id": deleted_message_id, "chat_id": chat_id},
-            res_type='delete_message'
+            res_type='delete_message',
+            session=session
         )
 
     async def readMessages(self, user_id: str, chat_id: str, session: AsyncSession):
@@ -153,7 +166,8 @@ class WSService:
 
         members = await ChatService(session).getChatMembers(UUID(chat_id))
         await self.sendMessageToMembers(
-            members=members, data={"chat_id": chat_id}, res_type="read_messages"
+            members=members, data={"chat_id": chat_id}, res_type="read_messages",
+            session=session
         )
 
     async def acceptContact(self, accepter_id: str, sender_id: str,
@@ -167,7 +181,8 @@ class WSService:
         await self.sendMessageToMembers(
             members=[UUID(sender_id)],
             data={'new_contact': res['accepter_user'], 'new_chat_id': res['chat_id']},
-            res_type='add_contact'
+            res_type='add_contact',
+            session=session
         )
         return {
             'new_contact': res['sender_user'], 'new_chat_id': res['chat_id']
@@ -180,7 +195,8 @@ class WSService:
         )
 
         await self.sendMessageToMembers(
-            members=[UUID(contact_id)], data=res, res_type='remove_contact'
+            members=[UUID(contact_id)], data=res, res_type='remove_contact',
+            session=session
         )
         return res
     
@@ -196,7 +212,8 @@ class WSService:
             members=members,
             data=res,
             except_id=user_id,
-            res_type='remove_member'
+            res_type='remove_member',
+            session=session
         )
         return res
 
@@ -210,7 +227,8 @@ class WSService:
             members=members,
             data=res,
             except_id=user_id,
-            res_type='remove_member'
+            res_type='remove_member',
+            session=session
         )
         return res
 
@@ -223,7 +241,8 @@ class WSService:
         await self.sendMessageToMembers(
             members=set(members),
             data=res,
-            res_type='add_group'
+            res_type='add_group',
+            session=session
         )
         return res
 
@@ -239,6 +258,7 @@ class WSService:
             members=members,
             data=res,
             except_id=user_id,
-            res_type='edit_group'
+            res_type='edit_group',
+            session=session
         )
         return res

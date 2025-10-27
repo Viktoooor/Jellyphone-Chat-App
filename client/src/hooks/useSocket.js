@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { wsClient } from "../service/wsService/wsClient";
 import { useStore } from "../store/store";
 
@@ -9,6 +9,7 @@ export const useSocket = () => {
 
     // idle | connecting | loading | ready | error
     const [status, setStatus] = useState("idle")
+    const connectedRef = useRef(false)
 
     const fetchInitialData = useCallback(async () => {
         try{
@@ -19,12 +20,16 @@ export const useSocket = () => {
             setStatus("ready")
         }catch(e){
             setStatus("error")
+            console.error(e)
         }
     }, [setInitialData, initListeners])
 
     useEffect(() => {
-        setStatus("connecting")
-        wsClient.connect(import.meta.env.VITE_WS_URL)
+        if(!connectedRef.current){
+            connectedRef.current = true
+            setStatus("connecting")
+            wsClient.connect(import.meta.env.VITE_WS_URL)
+        }
 
         const onOpen = () => {
             fetchInitialData()
@@ -33,7 +38,7 @@ export const useSocket = () => {
             setStatus("idle")
             removeListeners()
         }
-        const onError = (e) => {
+        const onError = () => {
             setStatus("error")
         }
 
@@ -41,17 +46,19 @@ export const useSocket = () => {
         wsClient.on("close", onClose)
         wsClient.on("error", onError)
 
+        initListeners()
+
         return () => {
             wsClient.off("open", onOpen)
             wsClient.off("close", onClose)
             wsClient.off("error", onError)
-            wsClient.disconnect()
+
             removeListeners()
-        }
-    }, [fetchInitialData, removeListeners])
+        };
+    }, [fetchInitialData, initListeners, removeListeners])
 
     return {
-        ready: status === 'ready',
+        ready: status === "ready",
         status
     }
 }

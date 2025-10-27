@@ -3,7 +3,7 @@ import FormInput from '../components/UI/form/FormInput'
 import { useCallback, useState } from 'react'
 import { isEmailValid } from '../tools/validateInput'
 import { useStore } from '../store/store'
-import { FiLogIn } from "react-icons/fi";
+import Button from '../components/UI/button/Button'
 
 const Login = () => {
     document.title = "Login"
@@ -23,12 +23,11 @@ const Login = () => {
         setData({...data, [input]: e.target.value})
     }, [data])
 
-    const handleLogin = useCallback(async () => {
+    const handleLogin = async (data) => {
         setDisable(true)
         setTimeout(() => {
             setDisable(false)
         }, 1000)
-
 
         if(!isEmailValid(data.email) || data.password.length < 8){
             setError("Invalid credentials")
@@ -40,7 +39,7 @@ const Login = () => {
 
         if(!res.ok)
             setError(res.message)
-    }, [data])
+    }
 
     const errorClass = (error.length == 0) ? 'not-visible' : ''
 
@@ -67,13 +66,11 @@ const Login = () => {
                         <span>{error}</span>
                     </div>
                     <div className="next-prev-buttons">
-                        <button 
-                            type="button" 
-                            className={`btn ${loading ? 'loading' : ''}`} 
-                            onClick={handleLogin} disabled={disable || loading}
-                        >
-                            <span>Log in</span>
-                        </button>
+                        <Button 
+                            label='Log in' type='primary' full
+                            onClick={() => handleLogin(data)} loading={loading}
+                            disabled={disable || loading} submit
+                        />
                     </div>
                 </form>
 

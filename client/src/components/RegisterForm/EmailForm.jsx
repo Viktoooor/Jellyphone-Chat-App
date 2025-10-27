@@ -1,4 +1,5 @@
 import FormInput from "../UI/form/FormInput"
+import Button from "../UI/button/Button"
 
 const EmailForm = ({ value, handleChange, nextPage, error, disable, loading }) => {
     return (
@@ -11,12 +12,11 @@ const EmailForm = ({ value, handleChange, nextPage, error, disable, loading }) =
                 <span>{error}</span>
             </div>
             <div className="next-prev-buttons">
-                <button 
-                    type="button" className={`btn ${loading ? 'loading' : ''}`}
-                    onClick={nextPage} disabled={disable || loading}
-                >
-                    <span>Next</span>
-                </button>
+                <Button 
+                    label='Next' type='primary' full
+                    onClick={nextPage} loading={loading}
+                    disabled={disable || loading} submit
+                />
             </div>
         </form>
     )

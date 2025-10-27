@@ -134,7 +134,7 @@ svg.loading{
 .auth-card {
   position: relative;
   width: 580px;
-  padding: 50px 5%;
+  padding: 40px 5%;
   border-radius: 34px;
   
   background: var(--card-bg);
@@ -147,7 +147,7 @@ svg.loading{
 }
 
 .auth-card header {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .auth-card h2 {
@@ -235,8 +235,10 @@ svg.loading{
   column-gap: 5%;
 }
 
-.next-prev-buttons .btn {
+.next-prev-buttons button {
   margin-top: 0;
+  font-weight: 600;
+  padding: 16px;
 }
 
 .username-hint{
@@ -245,33 +247,6 @@ svg.loading{
   color: var(--secondary-text);
   font-size: 14px;
   margin: 5px 5px 25px 5px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 18px;
-  height: 50px;
-  font-size: 16px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  background-color: var(--accent-color);
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.btn:active {
-  scale: 0.98;
 }
 
 .right-arrow {
@@ -308,38 +283,6 @@ svg.loading{
   height: 0;
   visibility: hidden;
 }
-
-.btn::after {
-	content: '';
-	display: block;
-	width: 1.2rem;
-	height: 1.2rem;
-	position: absolute;
-	left: 45%;
-	border: 0.15rem solid transparent;
-	border-right-color: white;
-	border-radius: 50%;
-	animation: animate 0.7s linear infinite;
-	opacity: 0;
-}
-
-@keyframes animate {
-	from {
-		transform: rotate(0);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-.btn.loading {
-  color: transparent;
-}
-
-.btn.loading::after {
-  opacity: 1;
-}
-
 
 ::-webkit-scrollbar {
   width: 6px;

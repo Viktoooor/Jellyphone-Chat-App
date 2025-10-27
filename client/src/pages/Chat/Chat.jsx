@@ -58,21 +58,15 @@ const ChatApp = () => {
 			<Sidebar
 				visible={visible} socketReady={status}
 			/>
-			{ready ?
-				<ChatWindow
-					onShowInfo={handleOpenInfo}
-					onOpenChats={handleOpenChats}
-					visible={visible}
-				/>
-			:
-				<div className='container'></div>
-			}
-			{ready &&
-				<InfoPanel
-					visible={visible}
-					onCloseInfo={handleCloseInfo}
-				/>
-			}
+			<ChatWindow 
+				onShowInfo={handleOpenInfo}
+				onOpenChats={handleOpenChats}
+				visible={visible}
+			/>
+			<InfoPanel
+				visible={visible}
+				onCloseInfo={handleCloseInfo}
+			/>
 
 			<Notification/>
 			<ContextMenu/>

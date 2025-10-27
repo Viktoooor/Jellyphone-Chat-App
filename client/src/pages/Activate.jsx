@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { isUUIDValid } from "../tools/validateInput"
 import $api from "../http"
+import FormFooter from "../components/UI/form/FormFooter"
 
 const Activate = () => {
     const navigate = useNavigate()
@@ -42,7 +43,22 @@ const Activate = () => {
     }, [])
 
     return (
-        <h1>{message}</h1>
+        <main className="auth-container">
+            <section className="auth-card">
+                <header>
+                    <img src='/favicon.ico' style={{width: '50px'}}/>
+                    <h2>Activate</h2>
+                </header>
+
+                <h3>{message}</h3>
+
+                <FormFooter 
+                    text="Activated?"
+                    link="/login"
+                    linkText="Log in"
+                />
+            </section>
+        </main>
     )
 }
 

@@ -39,6 +39,9 @@ def generate_upload_url(file_name: str, folder: str, file_size: int):
 
 def generate_download_url(
         file_name: str, folder: str, expiration: int = URL_EXPIRATION_SECONDS):
+    if file_name == 'default.png' and folder != 'chatPictures':
+        return '/default.png'
+    
     try:
         presigned_url = s3_client.generate_presigned_url(
             'get_object',

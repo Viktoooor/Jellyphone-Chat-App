@@ -232,7 +232,7 @@ class ChatService:
         
         group_chat = await self.getGroupChatById(new_chat_id)
         res = {
-            "new_chat": {"chat_id": str(new_chat_id), "type": "group"},
+            "new_chat": {"chat_id": str(new_chat_id), "type": "group", "role": "admin"},
             "new_group": group_chat, "new_message": message
         }
         

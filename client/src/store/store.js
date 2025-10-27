@@ -27,8 +27,8 @@ const getMessageDate = (message) => {
 }
 
 export const selectJoinedChats = memoize((state) => {
-    if(!state.chats)
-        return []
+    if(!state.chats || !state.contacts || !state.groupChats)
+        return null
     
     let list = [...state.chats]
     list = list.map((chat) => {
@@ -62,14 +62,12 @@ export const selectJoinedChats = memoize((state) => {
 })
 
 export const selectChat = memoize((state) => {
-    if(!state.selectedChatId){
+    if(!state.selectedChatId || !state.chats || !state.contacts || !state.groupChats)
         return null
-    }
 
     let selectedChat = state.chats.find(c => c.chat_id == state.selectedChatId)
-    if(!selectedChat){
+    if(!selectedChat)
         return null
-    }
 
     if(
         selectedChat.type == 'contact' &&
@@ -97,7 +95,7 @@ export const selectMembers = memoize((state) => {
         return state.groupChats[state.selectedChatId].members
     }
 
-    return null
+    return []
 })
 
 export const selectName = memoize((state) => {
@@ -106,7 +104,7 @@ export const selectName = memoize((state) => {
         return state.groupChats[state.selectedChatId].name
     }
 
-    return null
+    return ''
 })
 
 export const selectPicture = memoize((state) => {
@@ -115,7 +113,7 @@ export const selectPicture = memoize((state) => {
         return state.groupChats[state.selectedChatId].picture
     }
 
-    return null
+    return '/default.png'
 })
 
 export const useStore = create(
@@ -252,7 +250,7 @@ export const useStore = create(
 
                 set({user: res.data.user})
             }catch(e){
-                if(e.name != "CanceledError"){
+                if(e.name != "CanceledError" && e.message != "Network Error"){
                     wsClient.disconnect()
                     set({
                         isAuth: false, user: null, contacts: null, 
@@ -268,7 +266,7 @@ export const useStore = create(
             try{
                 if(picture){
                     const pictureBlob = dataURItoBlob(picture)
-                    const client_id = Date.now().toString()
+                    const client_id = v4()
                     const req = {
                         'request_type': request_type,
                         'files': [{
@@ -483,7 +481,7 @@ export const useStore = create(
         getContactRequests: async (signal) => {
             try{
                 const res = await $api.get(
-                    '/user/getContactRequests/?all=true', {signal: signal}
+                    '/user/getContactRequests?all=true', {signal: signal}
                 )
                 
                 set({contactRequests: res.data})
@@ -527,10 +525,13 @@ export const useStore = create(
                     'success', `Contact request to ${username} sent!`
                 )
 
-                const newOutgoing = ('outgoing' in get().contactRequests) ? 
-                    [...get().contactRequests['outgoing'], res.data.new_contact]
+                const new_contact = {
+                    ...res.data.new_contact, ['user_id']: res.data.new_contact.id
+                }
+                const newOutgoing = (get().contactRequests) ? 
+                    [...get().contactRequests['outgoing'], new_contact]
                 :
-                    [res.data.new_contact]
+                    [new_contact]
                 
                 set({contactRequests: {
                     ...get().contactRequests,
@@ -690,8 +691,12 @@ export const useStore = create(
 
                 set({
                     chats: new_chats,
-                    groupChats: new_group_chats
+                    groupChats: new_group_chats,
+                    messages: {...get().message, [chat_id]: []}
                 })
+                if(get().selectedChatId == chat_id){
+                    set({selectedChatId: null, visible: 'sidebar'})
+                }
             }else{
                 let new_group = {...get().groupChats[chat_id]}
                 const prev_messages = get().messages

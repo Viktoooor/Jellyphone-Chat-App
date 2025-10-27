@@ -4,15 +4,21 @@ import { useStore } from "../../store/store";
 import { isPasswordValid } from "../../tools/validateInput";
 import { FiArrowLeftCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import Button from "../UI/button/Button";
 
 const PasswordForm = ({ data, handleChange, prevPage }) => {
     const register = useStore((state) => state.register)
 
     const navigate = useNavigate()
-    const [loading, setLoading] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [disable, setDisable] = useState(false)
     const [error, setError] = useState('')
 
     const handleSubmit = async () => {
+        setDisable(true)
+        setTimeout(() => {
+            setDisable(false)
+        }, 1000)
         if(!isPasswordValid(data.password)){
             setError(
                 "Password must contain at least 8 characters, \
@@ -24,11 +30,11 @@ const PasswordForm = ({ data, handleChange, prevPage }) => {
             setError("Passwords are not equal")
             return
         }
-        setLoading('loading')
+        setLoading(true)
         const res = await register(
             data.email, data.username, data.firstname, data.password
         )
-        setLoading('')
+        setLoading(false)
         if(res.ok){
             navigate('/registerSuccess')
         }else{
@@ -50,15 +56,15 @@ const PasswordForm = ({ data, handleChange, prevPage }) => {
                 <span>{error}</span>
             </div>
             <div className="next-prev-buttons">
-                <button type="button" className="btn" onClick={prevPage}>
-                    <FiArrowLeftCircle size={20}/>
-                </button>
-                <button 
-                    type="button" className={`btn ${loading}`}
-                    onClick={handleSubmit} disabled={(loading == 'loading')}
-                >
-                    <span>Submit</span>
-                </button>
+                <Button
+                    icon={<FiArrowLeftCircle size={20}/>} type='primary' full
+                    onClick={prevPage}
+                />
+                <Button 
+                    label='Submit' type='primary' full
+                    onClick={handleSubmit} loading={loading}
+                    disabled={disable || loading} submit
+                />
             </div>
         </form>
     )

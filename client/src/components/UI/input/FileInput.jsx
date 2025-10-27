@@ -1,4 +1,4 @@
-import { useRef, memo, useState } from "react"
+import { useRef, memo, useState, useEffect } from "react"
 import { MdAttachFile } from "react-icons/md"
 import { FiLoader } from "react-icons/fi"
 import FileViewerModal from "../modal/FileViewer/FileViewerModal"
@@ -6,11 +6,12 @@ import $api from "../../../http"
 import { useStore } from "../../../store/store"
 import axios from 'axios';
 import compressImage from "../../../tools/compressImage"
-import { toDataURL } from '../../../tools/toDataUrl';
 import dataURItoBlob from '../../../tools/dataURItoBlob';
-import sleep from "../../../tools/sleep"
+import { v4 } from "uuid"
 
 const FileInput = memo(() => {
+	const setNotification = useStore(state => state.setNotification)
+
     const [isModalOpen, setIsModalOpen] = useState(false)
 	const [files, setFiles] = useState([])
 	const [loading, setLoading] = useState(false)
@@ -32,17 +33,17 @@ const FileInput = memo(() => {
 			if(isPhoto){
 				if(file.type != 'image/gif'){
 					const res = await compressImage(file);
-					previewUrl = res.blob
+					previewUrl = res.dataUrl
 					width = res.width
 					height = res.height
 					fileBlob = dataURItoBlob(previewUrl)
 				}else{
-					previewUrl = await toDataURL(file)
+					previewUrl = URL.createObjectURL(file)
 				}
 			}
 
 			return {
-				id: Date.now() + index,
+				id: v4(),
 				name: file.name,
 				previewUrl: previewUrl,
 				type: isPhoto ? 'photo' : 'file',
@@ -127,7 +128,6 @@ const FileInput = memo(() => {
 
 	const sendFile = useStore(state => state.sendFile)
 	const selectedChatId = useStore(state => state.selectedChatId)
-	const setNotification = useStore(state => state.setNotification)
 
 	const handleStartUploads = async () => {
 		try{
@@ -152,11 +152,15 @@ const FileInput = memo(() => {
 						await sendFile(selectedChatId, file_id, file)
 				}else{
 					setNotification('error', uploadUrls[file.id].error)
-					await sleep(1000)
+					updateFileState(
+						file.id,
+						{ uploadStatus: 'error' }
+					)
 				}
 			});
 		}catch(e){
 			setNotification('error', 'Unexpected error')
+			handleCloseModal()
 		}
 	};
 
@@ -166,6 +170,19 @@ const FileInput = memo(() => {
 			fileToCancel.abortController.cancel();
 		}
 	};
+	
+	useEffect(() => {
+		if(!isModalOpen)
+			return
+
+		const isInProgress = files.some(
+			(file) => file.uploadStatus === 'pending' || file.uploadStatus === 'uploading'
+		)
+		const hasUploadBegun = files.some(file => file.uploadStatus !== 'pending')
+
+		if(!isInProgress && hasUploadBegun)
+			handleCloseModal()
+	}, [files, isModalOpen])
 
     return (
         <>

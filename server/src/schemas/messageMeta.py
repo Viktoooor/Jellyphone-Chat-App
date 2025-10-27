@@ -9,8 +9,8 @@ class MessageMeta(BaseModel):
     file_id: str | None = None
     file_type: str | None = None
     file_size: int | None = None
-    width: int | None = None
-    height: int | None = None
+    width: float | None = None
+    height: float | None = None
 
     @model_validator(mode='after')
     def check_file_consistency(self):

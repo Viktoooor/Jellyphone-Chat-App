@@ -25,17 +25,17 @@ const compressImage = (file, maxWidth = 900, maxHeight = 900,
                 ctx.drawImage(img, 0, 0, width, height)
 
                 for(; quality > 0.1; quality -= 0.1){
-                    let compressedBlob = canvas.toDataURL('image/jpeg', quality)
+                    let compressed = canvas.toDataURL('image/jpeg', quality)
                     // estimated size
-                    let currentSizeKB = compressedBlob.length / 1024
+                    let currentSizeKB = compressed.length / 1024
                     if(currentSizeKB < maxKB){
                         resolve({
-                            'blob': compressedBlob, 'width': width, 'height': height
+                            'dataUrl': compressed, 'width': width, 'height': height
                         })
                     }
                 }
-                let compressedBlob = canvas.toDataURL('image/jpeg', quality)
-                resolve({'blob': compressedBlob, 'width': width, 'height': height})
+                let compressed = canvas.toDataURL('image/jpeg', quality)
+                resolve({'dataUrl': compressed, 'width': width, 'height': height})
             };
         };
     })

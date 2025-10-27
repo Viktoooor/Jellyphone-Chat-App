@@ -25,8 +25,8 @@ class MessageService:
         self.key = Fernet(key)
         self.fallback_uuid_str='00000000-0000-0000-0000-000000000000'
 
-    def getMessageDump(self, message: Message, sender_name: str = None,
-                       reply_name: str = None):
+    def getMessageDump(self, message: Message, sender_name: str | None = None,
+                       reply_name: str | None = None):
         message_dump = message.model_dump()
         if sender_name is not None:
             message_dump['sender_name'] = sender_name

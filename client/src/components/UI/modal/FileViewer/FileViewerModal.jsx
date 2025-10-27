@@ -1,6 +1,6 @@
 import '../style.css'
 import { FiX } from 'react-icons/fi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import UploadProgressIndicator from './UploadProgressIndicator';
 import Modal from '../Modal';
 
@@ -11,9 +11,12 @@ const FileViewerModal = ({ isOpen, onClose, files, onDeleteFile, onStartUploads,
     const handleSend = async () => {
         setLoading(true)
         await onStartUploads()
-        setLoading(false)
-        onClose()
 	}
+
+    useEffect(() => {
+        if(isOpen)
+            setLoading(false)
+    }, [isOpen])
 
     if(!isOpen)
         return null

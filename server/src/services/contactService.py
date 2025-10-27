@@ -171,6 +171,11 @@ class ContactService:
         # check if user didn't send this request earlier
         contactRequest = await self.getContactRequest(user_id, accepter_id)
         if contactRequest is not None:
+            if contactRequest.blocked:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="User blocked you"
+                )    
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Contact request already exists"

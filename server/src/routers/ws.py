@@ -95,9 +95,12 @@ async def WSMain(websocket: WebSocket, session: AsyncSession = Depends(get_sessi
                 res = await manager.leaveGroup(
                     user_id, data['chat_id'], session
                 )
-            elif data['type'] == 'send_status':
-                await manager.sendStatusToRecipient(
-                    data['recipient_id'], data['chat_id'], data['status'])
+            elif data['type'] == 'send_status': 
+                await manager.sendResponse(
+                    res_type='receive_status', recipient_id=data['recipient_id'], 
+                    data={"chat_id": data['chat_id'], "status": data['status']},
+                    session=session
+                )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,24 +108,25 @@ async def WSMain(websocket: WebSocket, session: AsyncSession = Depends(get_sessi
                 )
             
             if res is not None:
-                await websocket.send_json(
-                    {"status": "OK", "type": data['type'], "data": res, 
-                     'request_id': request_id} 
-                )
+                await websocket.send_json({
+                    "status": "OK", "type": data['type'],
+                    "data": res, "request_id": request_id
+                })
     except HTTPException as e:
-        await websocket.send_json({"status": "Bad Request", "type": 'show_error',
-                                   "data": {"message": e.detail}, 
-                                   "request_id": request_id})
+        await websocket.send_json({
+            "status": "Bad Request", "data": {"message": e.detail},
+            "request_id": request_id
+        })
     except ValidationError as e:
         # only cause by invalid message meta
-        await websocket.send_json({"status": "Bad Request", "type": 'show_error',
-                                   "data": {"message": "Invalid message meta"},
-                                   "request_id": request_id})
+        await websocket.send_json({
+            "status": "Bad Request", "data": {"message": "Invalid message meta"},
+            "request_id": request_id
+        })
     except ValueError as e:
         # error getting encryption key
-        await websocket.send_json(
-            {"status": "Server Error",
-             "data": {"message": "Unexpected server error"}}
-        )
+        await websocket.send_json({"status": "Server Error", "data": res})
     except WebSocketDisconnect:
+        await manager.disconnect(user_id, websocket, session)
+    except Exception:
         await manager.disconnect(user_id, websocket, session)

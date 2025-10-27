@@ -12,17 +12,19 @@ const ChatList = memo(({ changeMenu }) => {
     const chatList = useStore(selectJoinedChats)
     // just to make last messages change
     const messages = useStore(state => state.messages)
-
+    
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [search, setSearch] = useState("")
 
+    if(!chatList)
+        return null
+    
     const filteredChats = chatList.filter(chat => {
         if(chat.type == 'contact'){
             return chat.info.first_name.toLowerCase().includes(search.toLowerCase())
         }
         return chat.info.name.toLowerCase().includes(search.toLowerCase())
     });
-    
-    const [isModalOpen, setIsModalOpen] = useState(false);
     
     if(chatList.length == 0){
         return (
@@ -54,7 +56,7 @@ const ChatList = memo(({ changeMenu }) => {
             <div className="contact-list">
             {filteredChats.map((chat) => (
                 <ChatItem 
-                    key={chat.chat_id}
+                    key={chat.chat_id} lastMessage={chat.lastMessage}
                     chat={chat} onSelectChat={onSelectChat}
                     active={(chat.chat_id == selectedChatId)}
                 />

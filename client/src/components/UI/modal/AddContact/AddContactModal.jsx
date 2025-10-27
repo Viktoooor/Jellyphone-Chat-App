@@ -20,12 +20,14 @@ const AddContactModal = ({ isOpen, onClose, openRequests }) => {
 
         const res = await handleSendRequest(username)
         
-        if(!res.ok)
-            setError(res.message)
-
         setLoading(false)
-        openRequests()
-        onClose()
+        if(!res.ok){
+            setError(res.message)
+        }else{
+            setError('')
+            openRequests()
+            onClose()
+        }
 	}
 
     if(!isOpen) return null

@@ -3,7 +3,7 @@ import './style.css'
 import { memo } from "react"
 
 const Button = memo(({ label, icon, type, full,
-    customClass, onClick, loading, disabled }) => {
+    customClass, onClick, loading, disabled, submit }) => {
     const fullClass = (full) ? 'full' : ''
     const custom = (customClass) ? customClass : ''
 
@@ -12,13 +12,14 @@ const Button = memo(({ label, icon, type, full,
             className={`default-button ${type} ${fullClass} ${custom}`}
             onClick={onClick}
             disabled={disabled}
+            type={(submit) ? 'submit' : 'button'}
         >    
             {loading ? 
                 <FiLoader size={18} className="loading"/>
             :
                 <>
                     {icon}
-                    <span>{label}</span>
+                    {label && <span>{label}</span>}
                 </>
             }
         </button>

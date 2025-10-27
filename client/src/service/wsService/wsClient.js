@@ -1,3 +1,5 @@
+import { v4 } from 'uuid'
+
 class WSClient {
     constructor(){
         this.socket = null;
@@ -63,9 +65,9 @@ class WSClient {
                 return;
             } 
 
-            const request_id = Date.now();
+            const request_id = v4();
             const message = { type, ...payload, request_id };
-            this.pending.set(request_id, resolve);
+            this.pending.set(request_id, {resolver: resolve, rejecter: reject});
             this.socket.send(JSON.stringify(message));
 
             // timeout fallback
@@ -106,10 +108,10 @@ class WSClient {
             const { status, type, data, request_id } = msg;
 
             if(request_id && this.pending.has(request_id)){
-                const resolver = this.pending.get(request_id);
+                const {resolver, rejecter} = this.pending.get(request_id);
                 this.pending.delete(request_id);
                 if(status == 'Bad Request' || status == 'Server Error'){
-                    reject(new Error(data.message));
+                    rejecter(new Error(data.message));
                     return;
                 }
                 resolver(data);
@@ -122,7 +124,7 @@ class WSClient {
 
             this.emit(type, data);
         }catch(e){
-            console.error("Failed to parse message");
+            console.error(e);
         }
     }
 }

@@ -1,5 +1,6 @@
 import FormInput from "../UI/form/FormInput";
 import { FiArrowLeftCircle } from "react-icons/fi";
+import Button from "../UI/button/Button";
 
 const UsernameForm = ({value, handleChange, prevPage, nextPage, error, disable, loading }) => {
     return (
@@ -20,15 +21,15 @@ const UsernameForm = ({value, handleChange, prevPage, nextPage, error, disable, 
                 <span>{error}</span>
             </div>
             <div className="next-prev-buttons">
-                <button type="button" className="btn left" onClick={prevPage}>
-                    <FiArrowLeftCircle size={20}/>
-                </button>
-                <button 
-                    type="button" className={`btn ${loading ? 'loading' : ''}`}
-                    onClick={nextPage} disabled={disable || loading}
-                >
-                    <span>Next</span>
-                </button>
+                <Button
+                    icon={<FiArrowLeftCircle size={20}/>} type='primary' full
+                    onClick={prevPage}
+                />
+                <Button 
+                    label='Next' type='primary' full
+                    onClick={nextPage} loading={loading}
+                    disabled={disable || loading} submit
+                />
             </div>
         </form>
     )
