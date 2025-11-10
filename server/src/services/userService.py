@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from bcrypt import gensalt, hashpw, checkpw
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..dtos.userDTO import getUserDTOdump
@@ -79,7 +79,7 @@ class UserService:
 
         return user
     
-    async def register(self, register_data: RegisterReq):
+    async def register(self, register_data: RegisterReq, background_tasks: BackgroundTasks):
         isUsed = await self.isEmailUsed(register_data.email)
         if isUsed:
             raise HTTPException(
@@ -100,8 +100,10 @@ class UserService:
         hash = hash_bytes.decode('utf-8')
 
         activationLink = str(uuid4())
-        MailService.sendActivationMail(register_data.email, activationLink)
-        
+        background_tasks.add_task(
+            MailService.sendActivationMail,
+            register_data.email, activationLink
+        )
         register_data.password = hash
         
         user = User(**register_data.model_dump(), activation_link=activationLink)
@@ -169,8 +171,15 @@ class UserService:
                 detail="Unexpected error"
             )
         
-        user.first_name = first_name
+        isUser = await self.isUserNameUsed(user_name)
+        if isUser is True:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username is used"
+            )
         user.user_name = user_name
+
+        user.first_name = first_name
         if picture_id:
             user.picture = picture_id
         if bio:

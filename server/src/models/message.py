@@ -8,7 +8,8 @@ class Message(SQLModel, table=True):
     __tablename__ = "messages"
 
     id: UUID = Field(
-        sa_column=Column(pg.UUID, primary_key=True, unique=True, default=uuid4)
+        default_factory=uuid4,
+        sa_column=Column(pg.UUID, primary_key=True, unique=True)
     )
     chat_id: UUID = Field(nullable=False)
     message: bytes = Field(nullable=False)

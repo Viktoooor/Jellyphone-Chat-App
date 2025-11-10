@@ -34,7 +34,9 @@ export default class AuthService {
         return $api.post('/auth/register', {email, user_name, first_name, password})
     }
 
-    static async logout(){
+    static async logout(push_end){
+        if(push_end)
+            return $api.post(`/user/logout?push_end=${push_end}`)
         return $api.post('/user/logout')
     }
 }

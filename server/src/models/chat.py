@@ -6,7 +6,7 @@ class Chat(SQLModel, table=True):
     __tablename__ = "chats"
 
     chat_id: UUID = Field(
-        sa_column=Column(pg.UUID, primary_key=True, unique=True, default=uuid4)
+        sa_column=Column(pg.UUID, primary_key=True, unique=True)
     )
-    type: str = Field(nullable=False)
+    type: str = Field(nullable=False) # change to enum in future
     info: dict | None = Field(sa_type=pg.JSONB)

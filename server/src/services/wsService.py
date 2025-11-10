@@ -3,8 +3,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ..services.messageService import MessageService
 from ..services.chatService import ChatService
 from ..services.contactService import ContactService
+from ..services.notificationService import NotificationService
 from uuid import UUID
 from ..schemas.messageMeta import MessageMeta
+import asyncio
 
 class WSService:
     def __init__(self):
@@ -26,7 +28,11 @@ class WSService:
                         "request_id": request_id
                     })
                 except Exception:
-                    self.disconnect(recipient_id, con, session)
+                    await self.disconnect(recipient_id, con, session)
+        elif res_type == 'receive_message':
+            asyncio.create_task(NotificationService(session).sendNotification(
+                recipient_id, data["message"]
+            ))
 
     async def sendStatusToContacts(self, user_id: str, status: str,
                                    session: AsyncSession):

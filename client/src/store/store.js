@@ -236,8 +236,18 @@ export const useStore = create(
         },
 
         logout: async () => {
-            await AuthService.logout()
+            const reg = await navigator.serviceWorker.ready
+            const curSub = await reg.pushManager.getSubscription()
+
+            if(curSub){
+                await curSub.unsubscribe()
+                await AuthService.logout(curSub.endpoint)
+            }else{
+                await AuthService.logout()
+            }
+
             wsClient.disconnect()
+
             set({
                 isAuth: false, user: null, contacts: null, 
                 contactRequests: null, messages: null
@@ -316,7 +326,7 @@ export const useStore = create(
             set({
                 messages: data.messages, contacts: data.contacts,
                 chats: data.chats, groupChats: data.groupChats,
-                contactStatus: data.status
+                contactStatus: data.status, hasMore: true
             })
         },
 

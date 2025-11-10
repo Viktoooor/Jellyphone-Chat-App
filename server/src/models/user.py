@@ -20,7 +20,8 @@ class ContactRequest(SQLModel, table=True):
 class User(SQLModel, table = True):
     __tablename__ = "users"
     id: UUID = Field(
-        sa_column=Column(pg.UUID, primary_key=True, unique=True, default=uuid4)
+        default_factory=uuid4,
+        sa_column=Column(pg.UUID, primary_key=True, unique=True)
     )
     email: str = Field(unique=True, nullable=False)
     user_name: str = Field(unique=True, nullable=False)

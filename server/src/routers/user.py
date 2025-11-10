@@ -5,11 +5,13 @@ from ..db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..services.tokenService import TokenService
 from ..schemas.changeInfo import ChangeInfoReq
+from ..schemas.notificationSub import NotificationReq
 from ..services.userService import UserService
 from ..middlewares.authMiddleware import auth_middleware
 from ..services.contactService import ContactService
 from ..schemas.uploadUrl import UploadUrlReq
 from ..services.fileService import FileService
+from ..services.notificationService import NotificationService
 
 router = APIRouter(prefix="/api/user")
 
@@ -31,10 +33,14 @@ async def getUser(user_id: UUID = Depends(auth_middleware),
 
 @router.post("/logout")
 async def logout(
+    push_end: str | None = None,
     user_id: UUID = Depends(auth_middleware), 
     session: AsyncSession = Depends(get_session)
 ):
     await TokenService(session).removeToken(user_id)
+
+    if push_end is not None:
+        await NotificationService(session).removeSub(user_id, push_end)
 
     res = JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -128,9 +134,12 @@ async def getContactRequests(all: bool = False,
     )
 
 @router.post('/generateUploadUrls')
-def generateUploadUrl(req: UploadUrlReq, user_id = Depends(auth_middleware)):
+async def generateUploadUrl(req: UploadUrlReq, user_id = Depends(auth_middleware), 
+                            session: AsyncSession = Depends(get_session)):
     try:
-        upload_urls = FileService.generateUploadUrls(req.files, req.request_type)
+        upload_urls = await FileService(session).generateUploadUrls(
+            user_id, req.files, req.request_type
+        )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -141,3 +150,13 @@ def generateUploadUrl(req: UploadUrlReq, user_id = Depends(auth_middleware)):
             status_code=e.status_code,
             content={"message": e.detail}
         )
+    
+@router.post('/saveNotificationSub')
+async def saveNotificationSub(req: NotificationReq, user_id = Depends(auth_middleware),
+                              session: AsyncSession = Depends(get_session)):
+    await NotificationService(session).saveSub(user_id, req.sub)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Success"}
+    )

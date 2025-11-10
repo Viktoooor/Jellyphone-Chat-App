@@ -133,7 +133,6 @@ const Message = ({
             <div 
                 className="reply-content message-reply-content"
                 title={message.meta['reply_message']}
-                onClick={() => setFullReply(prev => !prev)}
             >
                 <h4>{message.reply_name}</h4>
                 <p>{message.meta['reply_message']}</p>

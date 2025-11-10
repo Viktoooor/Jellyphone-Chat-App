@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from ..schemas.register import RegisterReq
 from ..services.userService import UserService
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -37,10 +37,10 @@ async def checkUserEmail(email:str, session: AsyncSession = Depends(get_session)
     )
 
 @router.post("/register", status_code=201)
-async def registration(req: RegisterReq, 
+async def registration(req: RegisterReq, background_tasks: BackgroundTasks,
                        session: AsyncSession = Depends(get_session)):
     try:
-        await UserService(session).register(req)
+        await UserService(session).register(req, background_tasks)
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,

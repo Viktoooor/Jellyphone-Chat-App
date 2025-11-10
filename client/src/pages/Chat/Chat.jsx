@@ -1,13 +1,15 @@
 import Sidebar from '../../components/Chat/Sidebar';
 import ChatWindow from '../../components/Chat/ChatWindow';
 import InfoPanel from '../../components/Chat/InfoPanel';
-import Notification from '../../components/UI/notification/Notification';
+import NotificationElem from '../../components/UI/notification/Notification';
 import ContextMenu from '../../components/UI/contextMenu/ContextMenu';
 import { useStore } from '../../store/store';
 import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
 import './chat.css'
+import $api from '../../http';
+import urlBase64ToUint8Array from '../../tools/base64toUint8array';
 
 const ChatApp = () => {
 	document.title = "Chat"
@@ -35,6 +37,48 @@ const ChatApp = () => {
 	// contact/group info's x button
 	const handleCloseInfo = useCallback(() => {
 		setVisible('chat')
+	}, [])
+
+	useEffect(() => {
+		const subToNotifications = async () => {
+            const reg = await navigator.serviceWorker.ready
+            const curSub = await reg.pushManager.getSubscription()
+			if(Notification.permission === 'denied' || curSub)
+				return
+
+			try{
+				let permission;
+				if(Notification.permission === 'default'){
+					permission = await Notification.requestPermission();
+				}else{
+					permission = Notification.permission
+				}
+
+				if(permission === 'granted'){
+					const subscription = await reg.pushManager.subscribe({
+						userVisibleOnly: true,
+						applicationServerKey: urlBase64ToUint8Array(
+							import.meta.env.VITE_VAPID_PUBLIC_KEY
+						)
+					});
+
+					await $api.post(
+						'/user/saveNotificationSub',
+						{sub: JSON.stringify(subscription)}
+					);
+				}
+			}catch(error){
+				console.error(
+					'Error during permission request or subscription'
+				)
+			}
+		}
+
+		if('serviceWorker' in navigator && 'PushManager' in window){
+			navigator.serviceWorker.ready.then(() => {
+				subToNotifications()
+			})
+		}
 	}, [])
 
 	useEffect(() => {
@@ -68,7 +112,7 @@ const ChatApp = () => {
 				onCloseInfo={handleCloseInfo}
 			/>
 
-			<Notification/>
+			<NotificationElem/>
 			<ContextMenu/>
 		</div>
 	);
