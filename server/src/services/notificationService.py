@@ -1,17 +1,19 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..models.notification_sub import NotificationSub
-from uuid import UUID
-import os
+from uuid import UUID, uuid4
 from pywebpush import webpush, WebPushException
 from sqlmodel import select
 import json
+from config import settings
 
 class NotificationService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
     async def saveSub(self, user_id: UUID, sub: str):
-        new_sub = NotificationSub(user_id=user_id, sub=json.loads(sub))
+        new_sub = NotificationSub(
+            id=uuid4(), user_id=user_id, sub=json.loads(sub)
+        )
         self.session.add(new_sub)
 
         await self.session.commit()
@@ -28,8 +30,8 @@ class NotificationService:
         await self.session.commit()
 
     async def sendNotification(self, user_id: UUID, data: dict):
-        vapid_private_key = os.getenv('VAPID_PRIVATE_KEY')
-        service_mail = os.getenv('SMTP_NAME')
+        vapid_private_key = settings.VAPID_PRIVATE_KEY
+        service_mail = settings.SMTP_NAME
         query = select(NotificationSub).where(NotificationSub.user_id == user_id)
         res = await self.session.exec(query)
         devices = res.all()

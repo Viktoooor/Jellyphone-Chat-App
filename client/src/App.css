@@ -115,6 +115,10 @@ svg.loading{
   margin-top: auto;
 }
 
+.google-button {
+  padding: 14px !important;
+}
+
 .create-group-button{
   margin-top: 20px;
 }

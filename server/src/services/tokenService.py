@@ -1,5 +1,3 @@
-import jwt
-import os
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import datetime, timedelta, timezone
@@ -7,6 +5,9 @@ from fastapi import HTTPException, status
 from ..models.token import Token
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import select
+from config import settings
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 class TokenService:
     def __init__(self, session: AsyncSession):
@@ -19,7 +20,7 @@ class TokenService:
             "iat": datetime.now(timezone.utc)
         })
 
-        refreshSecret = os.getenv("JWT_SECRET")
+        refreshSecret = settings.JWT_SECRET
 
         token = jwt.encode(tokenPayload, refreshSecret, algorithm="HS256")
 
@@ -28,16 +29,16 @@ class TokenService:
     def validateToken(token: str):
         try:
             user = jwt.decode(
-                token, os.getenv("JWT_SECRET"), algorithms=["HS256"]
+                token, settings.JWT_SECRET, algorithms=["HS256"]
             )
 
             return user
-        except jwt.ExpiredSignatureError:
+        except ExpiredSignatureError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired"
             )
-        except jwt.InvalidTokenError:
+        except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"

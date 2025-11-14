@@ -222,6 +222,18 @@ export const useStore = create(
                 return { ok: false, message }
             }
         },
+        googleLogin: async (code) => {
+            try{
+                const res = await $api.post('/auth/google/login', {code})
+                set({isAuth: true, user: res.data.user})
+
+                return { ok: true, 'message': 'Login success' }
+            }catch(e){
+                const message = e.response?.data?.message || "Unexpected error"
+                
+                return { ok: false, message }
+            }
+        },
 
         register: async (email, user_name, first_name, password) => {
             try{
@@ -236,12 +248,16 @@ export const useStore = create(
         },
 
         logout: async () => {
-            const reg = await navigator.serviceWorker.ready
-            const curSub = await reg.pushManager.getSubscription()
+            if('serviceWorker' in navigator && 'PushManager' in window){
+                const reg = await navigator.serviceWorker.ready
+                const curSub = await reg.pushManager.getSubscription()
 
-            if(curSub){
-                await curSub.unsubscribe()
-                await AuthService.logout(curSub.endpoint)
+                if(curSub){
+                    await curSub.unsubscribe()
+                    await AuthService.logout(curSub.endpoint)
+                }else{
+                    await AuthService.logout()
+                }
             }else{
                 await AuthService.logout()
             }
@@ -252,7 +268,7 @@ export const useStore = create(
                 isAuth: false, user: null, contacts: null, 
                 contactRequests: null, messages: null
             })
-        }, 
+        },
         
         checkAuth: async (signal) => {
             try{

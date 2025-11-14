@@ -1,12 +1,16 @@
 import FormFooter from '../components/UI/form/FormFooter'
 import FormInput from '../components/UI/form/FormInput'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { isEmailValid } from '../tools/validateInput'
 import { useStore } from '../store/store'
+import { useSearchParams } from 'react-router-dom'
 import Button from '../components/UI/button/Button'
+import GoogleIcon from '../components/UI/icon/GoogleIcon'
 
 const Login = () => {
     document.title = "Login"
+
+    const [params, setParams] = useSearchParams()
 
     const login = useStore((state) => state.login)
 
@@ -37,9 +41,37 @@ const Login = () => {
         const res = await login(data.email, data.password)
         setLoading(false)
 
-        if(!res.ok)
+        if(res.ok === false)
             setError(res.message)
     }
+
+    const handleGoogleLogin = (e) => {
+        e.preventDefault()
+        window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/url`
+    }
+
+    const googleLogin = useStore(state => state.googleLogin)
+    const [googleLoading, setGoogleLoading] = useState(false)
+    useEffect(() => {
+        const handleGoogleLogin = async () => {
+            setDisable(true)
+            setTimeout(() => {
+                setDisable(false)
+            }, 1000)
+
+            setGoogleLoading(true)
+            const res = await googleLogin(params.get('code'))
+            setGoogleLoading(false)
+
+            if(res.ok === false)
+                setError(res.message)
+        }
+        if(params.get('error')){
+            setError(params.get('error'))
+        }else if(params.get('code')){
+            handleGoogleLogin()
+        }
+    }, [params])
 
     const errorClass = (error.length == 0) ? 'not-visible' : ''
 
@@ -73,6 +105,17 @@ const Login = () => {
                         />
                     </div>
                 </form>
+                <div style={{margin: '15px 0'}}>
+                    <span>or</span>
+                </div>
+                <div className="next-prev-buttons">
+                    <Button 
+                        label='Continue with Google' icon={<GoogleIcon/>}
+                        type='secondary' full
+                        onClick={handleGoogleLogin} customClass='google-button'
+                        disabled={disable || googleLoading} loading={googleLoading}
+                    />
+                </div>
 
                 <FormFooter 
                     text="Don't have an account?"

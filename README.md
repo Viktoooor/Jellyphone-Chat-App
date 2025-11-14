@@ -1,15 +1,21 @@
 ### Prod: <a href="https://jellyphone.lol/login?test=t">link</a>
 
 ## Setup
-Install node 22, postgres 17, python 3.10
+Install node 22 or later, postgres 17, python 3.10
+
+Create postgres database and create all tables using sql files in server/dbTables
 
 In client and server folder rename example.env to .env
 
 In server/.env fill JWT_SECRET and KEY with random strings, DB_URL change with your postgres url
 
-Create mail account that allows sending mails programmatically.
+Generate vapid keys and fill public key in both env's and private key in server/.env
+
+Create e-mail account that allows sending mails programmatically.
 If you want to use gmail, here is a quick guide: <a href="https://www.youtube.com/watch?v=ueqZ7RL8zxM">youtube video</a>
-Then fill all credentials in .env
+Then fill all credentials in server/.env
+
+Create oauth client id and fill OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET in server/.env. Here is an official guide on how to create google's oauth client id: https://support.google.com/googleapi/answer/6158849?hl=en
 
 #### AWS
 Create aws account. If you haven't used aws before you can create free account here: https://aws.amazon.com/free

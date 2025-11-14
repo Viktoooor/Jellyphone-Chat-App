@@ -16,7 +16,9 @@ manager = WSService()
 async def WSMain(websocket: WebSocket, session: AsyncSession = Depends(get_session)):
     # Authorization
     token = websocket.cookies.get('token')
-    
+    if token is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        
     try:
         user = TokenService.validateToken(token)
     except HTTPException as e:

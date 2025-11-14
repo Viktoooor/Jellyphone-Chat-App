@@ -4,15 +4,12 @@ import boto3
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
 import logging
-import os
-from dotenv import load_dotenv
+from config import settings
 
-load_dotenv() 
-
-AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
-AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY')
-S3_REGION = os.getenv('S3_REGION')
-S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+AWS_ACCESS_KEY = settings.AWS_ACCESS_KEY
+AWS_SECRET_KEY = settings.AWS_SECRET_KEY
+S3_REGION = settings.S3_REGION
+S3_BUCKET_NAME = settings.S3_BUCKET_NAME
 URL_EXPIRATION_SECONDS = 3000
 
 s3_client = boto3.client(

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Body
 from ..schemas.register import RegisterReq
 from ..services.userService import UserService
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..db.main import get_session
 from ..schemas.login import LoginReq
 from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
+from typing import Annotated
 
 router = APIRouter(prefix="/api/auth")
 
@@ -75,6 +77,38 @@ async def login(req: LoginReq, session: AsyncSession = Depends(get_session)):
     try:
         userData = await UserService(session).login(req)
         
+        res = JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=userData
+        )
+        res.set_cookie(
+            key='token', 
+            value=userData['token'], 
+            httponly=True,
+            samesite='strict', # IMPORTANT
+            secure=False, # set to True in https
+            max_age=30*24*60*60
+        )
+        
+        return res
+    except HTTPException as e:
+        return JSONResponse(
+            content={"message": e.detail},
+            status_code=e.status_code
+        )
+
+@router.get("/google/url")
+def get_google_uri():
+    redirect_uri = UserService.generate_oauth_redirect_uri()
+    
+    return RedirectResponse(url=redirect_uri, status_code=302)
+
+@router.post("/google/login")
+async def google_auth(code: Annotated[str, Body(embed=True)],
+                      session: AsyncSession = Depends(get_session)):
+    try:
+        userData = await UserService(session).google_auth(code)
+
         res = JSONResponse(
             status_code=status.HTTP_200_OK,
             content=userData

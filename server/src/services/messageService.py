@@ -1,4 +1,3 @@
-import os
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from cryptography.fernet import Fernet
@@ -14,12 +13,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import flag_modified
 from ..s3 import s3_utils
+from config import settings
 
 class MessageService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-        key = os.getenv('KEY')
+        key = settings.KEY
         if not key:
             raise ValueError('No encryption key set')
         self.key = Fernet(key)

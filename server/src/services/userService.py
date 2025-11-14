@@ -10,6 +10,13 @@ from ..models.user import User
 from .tokenService import TokenService
 from .mailService import MailService
 from  ..s3 import s3_utils
+import httpx
+from config import settings
+from jose import jwt
+import re
+import random
+import secrets
+import requests
 
 class UserService:
     def __init__(self, session: AsyncSession):
@@ -155,6 +162,97 @@ class UserService:
         )
 
         userDTO_dump = getUserDTOdump(candidate, picture_url)
+
+        return {"token": token, "user": userDTO_dump}
+
+    def generate_oauth_redirect_uri():
+        scope = "openid profile email"
+        redirect_uri = (
+            f"https://accounts.google.com/o/oauth2/v2/auth"
+            f"?client_id={settings.OAUTH_CLIENT_ID}"
+            f"&response_type=code"
+            f"&redirect_uri={settings.CLIENT_URL}/login"
+            f"&scope={scope}"
+        )
+
+        return redirect_uri
+    
+    async def google_auth(self, code: str):
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": settings.OAUTH_CLIENT_ID,
+                    "client_secret": settings.OAUTH_CLIENT_SECRET,
+                    "redirect_uri": f'{settings.CLIENT_URL}/login',
+                    "grant_type": "authorization_code"
+                }
+            )
+        res_data = res.json()
+        if "id_token" not in res_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Bad request"
+            )
+        id_token = res_data['id_token']
+        
+        jwks = requests.get("https://www.googleapis.com/oauth2/v3/certs").json()
+        user_data = jwt.decode(
+            id_token, jwks, algorithms=["RS256"],
+            audience=settings.OAUTH_CLIENT_ID,
+            issuer=["https://accounts.google.com", "accounts.google.com"],
+            options={"verify_at_hash": False}
+        )
+
+        if 'email_verified' not in user_data or user_data['email_verified'] is not True:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is not verified. Try using another account"
+            )
+        
+        user_name = re.sub(
+            r'[^a-z0-9_]', '_', user_data["email"].split('@')[0]
+        )
+        if len(user_name) > 32:
+            user_name = user_name[:32]
+        elif len(user_name) < 3:
+            user_name = user_name + str(random.randint(100, 999))
+        
+        first_name = user_data["name"]
+        if len(first_name) > 32:
+            first_name = first_name[:32]
+        
+        isEmail = await self.isEmailUsed(user_data["email"])
+        if isEmail is not True:
+            salt = gensalt(10)
+            bytes = secrets.token_bytes(32) # random password
+            hash_bytes = hashpw(bytes, salt)
+            hash = hash_bytes.decode('utf-8')
+
+            password = hash
+            
+            user = User(
+                email=user_data["email"],
+                user_name=user_name,
+                password=password,
+                first_name=first_name,
+                is_activated=True
+            )
+
+            self.session.add(user)
+            await self.session.commit()
+
+        user = await self.getUserByEmail(user_data["email"])
+        token = TokenService.generateToken({"id": str(user.id)})
+
+        await TokenService(self.session).saveToken(user.id, token)
+
+        picture_url = s3_utils.generate_download_url(
+            user.picture, "profilePictures", 3000
+        )
+
+        userDTO_dump = getUserDTOdump(user, picture_url)
 
         return {"token": token, "user": userDTO_dump}
     
